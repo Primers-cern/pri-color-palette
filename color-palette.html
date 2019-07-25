@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>color-palette</title>
+  <style>
+    :root {
+      --block-width: 150px;
+      --block-margin-top: 50px;
+      --block-margin-width: 20px;
+      --cover-width: 0px;
+      --cover-flex: 0;
+      --theme-color: #8a4eff;
+    }
+
+    html,
+    body,
+    ul,
+    li,
+    p {
+      margin: 0;
+      padding: 0;
+      font-size: 12px;
+    }
+
+    li {
+      list-style: none;
+    }
+
+    .pageWrapper {}
+
+    .btnBox {
+      position: fixed;
+      z-index: 9;
+      top: 0;
+      right: 0;
+      font-size: 0;
+    }
+
+    .btnBox .btn {
+      font-size: 12px;
+      padding: 6px 20px;
+      margin-left: 10px;
+      color: #fff;
+      background: var(--theme-color);
+      transition: opacity .2s;
+      cursor: pointer;
+      opacity: .6;
+    }
+
+    .btnBox .btn:hover {
+      opacity: 1;
+    }
+
+    #mainColorList {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+
+    #mainColorList::after {
+      content: '';
+      width: var(--cover-width);
+      flex-grow: var(--cover-flex);
+      margin-top: var(--block-margin-top);
+    }
+
+    .mainColorItem {
+      flex-grow: 1;
+      margin: var(--block-margin-top) var(--block-margin-width) 0;
+    }
+
+    .mainColorItem .colorWrapper {
+      margin: 0 auto;
+      width: var(--block-width);
+      box-shadow: 0 0 20px -8px rgba(80, 80, 80, .2);
+    }
+
+    .mainColorItem .colorBox {
+      position: relative;
+    }
+
+    .mainColorItem .showColor {
+      height: 0;
+      padding-bottom: 65%;
+      cursor: crosshair;
+    }
+
+    .mainColorItem .colorText {
+      position: relative;
+      padding: 10px 10px 20px;
+      width: var(--block-width);
+      box-sizing: border-box;
+      border: 1px solid #e9e9e9;
+      border-top: none;
+    }
+
+    .mainColorItem .title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #454545;
+    }
+
+    .mainColorItem .code {
+      font-size: 12px;
+      color: #999;
+      margin-top: 6px;
+    }
+
+    .mainColorItem .expandBtn {
+      position: absolute;
+      bottom: -8px;
+      right: 0;
+      padding: 2px 10px;
+      margin-right: 6px;
+      color: #787878;
+      background-color: #eee;
+      opacity: 0;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+
+    .mainColorItem .colorText:hover .expandBtn {
+      opacity: .5;
+    }
+
+    #mainColorList .mainColorItem .expandBtn:hover {
+      opacity: 1;
+    }
+
+
+    #msgBox {
+      position: fixed;
+      top: 20px;
+      left: -100px;
+      width: 100px;
+      font-size: 12px;
+      color: #fff;
+      text-align: center;
+    }
+
+    #msgBox.active {
+      left: 0;
+    }
+
+    #msgList {
+      position: relative;
+      width: 100%;
+    }
+
+    .msgItem {
+      position: absolute;
+      left: 0;
+      line-height: 32px;
+      width: 100%;
+      opacity: 0;
+    }
+
+    #clipInput {
+      position: absolute;
+      left: -1px;
+      height: 1px;
+      width: 1px;
+      border: none;
+    }
+
+    /* 添加颜色遮罩 */
+    .shade {
+      position: fixed;
+      z-index: 999;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(255, 255, 255, .9);
+      display: none;
+      text-align: center
+    }
+    .addNewInput {
+      display: block;
+      margin: 50px auto;
+      background-color: rgba(0, 0, 0, .6);
+      border: none;
+      color: #f4f4f4;
+      border-left: 4px solid #00000000;
+      padding: 16px 0;
+      font-size: 20px;
+      text-align: center;
+      outline: none;
+      transition: border .2s, background-color .4s;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .addNewInput:focus {
+      border: none;
+      background-color: rgba(0, 0, 0, .8);
+      border-left: 4px solid var(--theme-color);
+    }
+    .addNewInput::-webkit-input-placeholder {
+      color: #ccc;
+    }
+    #confirmNew {
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      background-color: var(--theme-color);
+      transition: opacity .2s;
+      cursor: pointer;
+      opacity: .6;
+    }
+    #confirmNew:hover {
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 功能按钮 -->
+  <div class="btnBox">
+    <span id="addNew" class="btn">new</span>
+    <span id="download" class="btn">Download</span>
+  </div>
+  <div class="pageWrapper">
+    <ul id="mainColorList"></ul>
+
+    <!-- 提示toast -->
+    <div id="msgBox">
+      <ul id="msgList"></ul>
+    </div>
+  </div>
+
+  <!-- 遮罩层 -->
+  <div id="addNewForm" class="shade">
+    <input class="addNewInput" type="text" name="colorName" placeholder="名称">
+    <input class="addNewInput" type="text" name="colorCode" placeholder="HEX 颜色编码">
+    <button id="confirmNew">确认添加</button>
+  </div>
+  <!-- 复制框 -->
+  <input type="text" id="clipInput" />
+  <script>
+    // 全局变量
+    var _mainColorList = document.getElementById('mainColorList'),
+      _addNew = document.getElementById('addNew'),
+      _confirmAddNew = document.getElementById('confirmNew'),
+      _download = document.getElementById('download'),
+      resizeTimer
+
+      // 初始化页面
+      ! function _initPage() {
+        _mainColorList.innerHTML = `` // 清空色块容器
+
+        // 引入颜色数据文件
+        let _body = document.getElementsByTagName('body')[0],
+          _srcipt = document.createElement('script'),
+          indexColor = [{
+            name: 'Night',
+            code: '#000000'
+          }, {
+            name: 'Beton',
+            code: '#787878'
+          }, {
+            name: 'Snow',
+            code: '#FFFFFF'
+          }]
+        _srcipt.type = 'text/javascript'
+        _srcipt.onerror = () => createColorBlock(indexColor)
+        _srcipt.src = 'color.json'
+
+        _body.appendChild(_srcipt)
+      }()
+
+    window.onload = function () {
+      // 下载数据文件
+      _download.addEventListener('click', e => {
+        let dataArr = {
+            colorList: []
+          },
+          items = document.getElementsByClassName('showColor')
+
+        for (let i of items) {
+          let itemData = i.dataset,
+            pushData = {
+              name: itemData.colorName,
+              code: itemData.colorCode
+            }
+          dataArr.colorList.push(pushData)
+        }
+
+        let jsonp = 'getColor(' + JSON.stringify(dataArr) + ')'
+
+        exportRaw('color.json', jsonp)
+      })
+
+      // 新增色块
+      _addNew.addEventListener('click', e => {
+        const shade = document.getElementById('addNewForm')
+        fadeToggle(shade, 200, true)
+
+        shade.addEventListener('click', function (e) {
+          const target = e.target
+          if (target == this) closeShade()
+        })
+      })
+
+      // 确认输入框内容
+      _confirmAddNew.addEventListener('click', e => {
+        let inputs = document.getElementsByClassName('addNewInput')
+        let name = inputs[0].value
+        let code = inputs[1].value
+        if (!name || !code) {
+          alert('请正确输入内容')
+          return
+        }
+        createColorBlock({name: inputs[0].value, code: inputs[1].value})
+        closeShade()
+      })
+
+      // 绑定点击复制方法
+      _mainColorList.addEventListener('click', function (e) {
+        let target = e.target
+        let dataList = target.dataset
+        let handle = dataList.handle
+        
+        if (!handle) return
+        else if (handle == 'copy') copyText(dataList.colorCode)
+        else if (handle == 'delete') deleteColorBlock(target)
+      })
+    }
+
+    window.onresize = function () {
+      clearInterval(resizeTimer)
+      resizeTimer = setTimeout(setCoverWidth, 100)
+    }
+
+    // 重置新增输入框
+    function closeShade(callBack) {
+      fadeToggle(document.getElementById('addNewForm'), 200, false)
+      let inputs = document.getElementsByClassName('addNewInput')
+      for (let item of inputs) {
+        item.value = ''
+      } // 重置输入框
+    }
+
+    // 复制的方法   [内容, 回调]
+    function copyText(text, callback) {
+      let clipBoard = document.getElementById('clipInput')
+      clipBoard.value = text
+      clipBoard.select();
+      document.execCommand('copy');
+      if (callback) callback()
+      showMsg('success', '复制成功')
+      clipBoard.value = ''
+    }
+
+    // 显示提示 (['sucess'/'error'], string)
+    function showMsg(type, text) {
+      let msgBox = document.getElementById('msgBox'),
+        msgList = document.getElementById('msgList'),
+        msgObj = type == 'success' ? {
+          color: '#67C23A',
+          content: 'Success!'
+        } : {
+          color: '#F56C6C',
+          content: 'Error!'
+        }
+      if (text) msgObj.content = text
+
+      let thisItem = document.createElement('li')
+      thisItem.classList.add('msgItem')
+      thisItem.style.backgroundColor = msgObj.color
+      thisItem.style.top = msgList.childNodes.length * (32 + 10) + 'px'
+      thisItem.innerText = msgObj.content
+
+      msgList.appendChild(thisItem)
+      msgBox.classList.add('active')
+
+      fadeToggle(thisItem, 200, true)
+      setTimeout(() => {
+        fadeToggle(thisItem, 600, false, el => {
+          el.remove()
+          if (!msgList.childNodes.length) msgBox.classList.remove('active')
+        })
+      }, 2000)
+    }
+
+    // 渐隐渐显方法
+    function fadeToggle(el, time, toggle, callback) {
+      let interval = 20, // 执行间隔
+        step = interval / time,
+        current = toggle ? 0 : 1,
+        _style = el.style,
+        toggleTimer
+
+      // 重置样式
+      _style.opacity = current
+      _style.display = 'block'
+      toggleTimer = setInterval(() => {
+        current += (toggle ? step : -step)
+        if (current > 1 || current < 0) {
+          _style.opacity = Math.round(current)
+          if (!toggle) _style.display = 'none'
+          clearInterval(toggleTimer)
+          toggleTimer = null
+          if (callback && typeof callback == 'function') callback(el)
+          return
+        }
+        el.style.opacity = current
+      }, interval)
+    }
+
+    // 下载配置文件方法
+    function exportRaw(name, data) {
+      var urlObject = window.URL || window.webkitURL || window;
+      var export_blob = new Blob([data]);
+      var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+      save_link.href = urlObject.createObjectURL(export_blob);
+      save_link.download = name;
+
+      var ev = document.createEvent("MouseEvents");
+      ev.initMouseEvent("click", true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+      save_link.dispatchEvent(ev);
+    }
+
+    // 添加色块方法
+    function createColorBlock(data) {
+      let dataList = data instanceof Array ? data : [data]
+
+      // 遍历生成色块
+      for (let i in dataList) {
+        let li = document.createElement('li'),
+          item = dataList[i],
+          code = item.code,
+          name = item.name
+        let liContent =
+          `<div class="colorWrapper"><div class="colorBox"><div class="showColor" style="background-color: ` +
+          code + `" data-color-code="` +
+          code + `" data-color-name="` +
+          name + `" data-handle="copy"></div></div><div class="colorText"><p class="title">` +
+          name + `</p><p class="code">` +
+          code + `</p><span class="expandBtn" data-handle="delete">Del</span></div></div>`
+
+        li.className = 'mainColorItem'
+        li.innerHTML = liContent
+
+        _mainColorList.appendChild(li)
+      }
+      // 重置补位元素
+      setCoverWidth()
+      showMsg('success', '添加成功')
+    }
+
+    // 删除色块方法
+    function deleteColorBlock(el) {
+      let block = el.parentNode.parentNode.parentNode
+      
+      confirm('删除后无法恢复，确认删除')
+      fadeToggle(block, 200, false, function() {
+        _mainColorList.removeChild(block)
+        setCoverWidth()
+        showMsg('success', '删除成功')
+      })
+    }
+
+    // 设置补位块宽度
+    function setCoverWidth() {
+      let clientWidth = document.documentElement.clientWidth,
+        colorBlocks = document.getElementsByClassName('colorWrapper'),
+        blockMargin = 20
+
+      if (colorBlocks) { // 当有色块是才执行
+        let blockWidth = colorBlocks[0].offsetWidth + blockMargin * 2, // 一个色块包含两个外边距的宽度
+          eachRowNum = parseInt(clientWidth / blockWidth), // 每一行的色块个数
+          lastRowVacancy = eachRowNum - colorBlocks.length % eachRowNum // 最后一行缺少的个数
+        if (lastRowVacancy == eachRowNum || blockWidth * colorBlocks.length <= clientWidth) lastRowVacancy =
+        0; // 最后一行满了或一行能装满
+
+        // 将最后一行
+        document.documentElement.style.setProperty('--cover-flex', lastRowVacancy)
+        document.documentElement.style.setProperty('--cover-width', lastRowVacancy * blockWidth + 'px')
+      }
+    }
+  </script>
+</body>
+
+</html>
